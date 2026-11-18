@@ -1,1 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Status - Queue Management System</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: #1a365d; font-size: 22px; margin-bottom: 5px; }
+        .ticket-tag { font-size: 20px; font-weight: bold; color: #3182ce; margin-bottom: 20px; }
+        .status-box { background: #ebf8ff; border: 1px solid #bee3f8; padding: 20px; border-radius: 6px; margin-bottom: 20px; }
+        .stat-item { margin-bottom: 15px; }
+        .stat-label { font-size: 14px; color: #4a5568; display: block; margin-bottom: 3px; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #2b6cb0; }
+        .info-row { display: flex; justify-content: space-between; font-size: 14px; color: #4a5568; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold; }
+        .btn-home:hover { background: #2b6cb0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Live Queue Status</h1>
+        <div class="ticket-tag">Ticket: {{ ticket.ticket_number }}</div>
+
+        <div class="status-box">
+            <div class="stat-item">
+                <span class="stat-label">People Ahead in Queue</span>
+                <span class="stat-value">{{ queue_position }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span>Service:</span>
+                <strong>{{ ticket.service.name }}</strong>
+            </div>
+            <div class="info-row">
+                <span>Assigned Teller:</span>
+                <strong>{% if assignment %}Teller {{ assignment.teller.teller_number }}{% else %}Pending Allocation{% endif %}</strong>
+            </div>
+            <div class="info-row">
+                <span>Current Status:</span>
+                <strong style="color: #38a169;">{{ ticket.get_status_display }}</strong>
+            </div>
+        </div>
+
+        <a href="{% url 'service_selection' %}" class="btn-home">Back to Services</a>
+    </div>
+</body>
+</html>
 
