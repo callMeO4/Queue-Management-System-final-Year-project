@@ -13,5 +13,19 @@ urlpatterns = [
         views.customer_status_view,
         name='customer_status',
     ),
+    path(
+        'lobby/',
+        views.lobby_display_view,
+        name='lobby_display',
+    ),
+    path(
+        'tickets/<int:ticket_id>/<str:action>/',
+        views.update_ticket_status,
+        name='update_ticket_status',
+    ),
+    path(
+        'tellers/<int:teller_id>/toggle/',
+        views.toggle_teller_availability,
+        name='toggle_teller_availability',
+    ),
 ]
-

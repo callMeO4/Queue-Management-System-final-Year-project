@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby & Counter Display - Queue Management System</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 960px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #1a365d; margin-top: 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .teller-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; background: #f8fafc; }
+        .badge-avail { color: #2f855a; font-weight: bold; }
+        .badge-busy { color: #c53030; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        th { background: #edf2f7; color: #1a365d; }
+        button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 10px; font-size: 12px; font-weight: bold; }
+        .btn-serve { background: #3182ce; color: white; }
+        .btn-done { background: #2f855a; color: white; }
+        .btn-toggle { background: #4a5568; color: white; margin-top: 8px; }
+        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 18px; border-radius: 4px; text-decoration: none; font-weight: bold; margin-top: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Live Counter & Lobby Queue Display</h1>
+
+        <h2>Teller Counters</h2>
+        <div class="grid">
+            {% for teller in tellers %}
+            <div class="teller-card">
+                <div><strong>Counter {{ teller.teller_number }}</strong></div>
+                <div>State: {{ teller.current_status_state }}</div>
+                <div>
+                    {% if teller.is_available %}
+                        <span class="badge-avail">Available</span>
+                    {% else %}
+                        <span class="badge-busy">Unavailable</span>
+                    {% endif %}
+                </div>
+                <form action="{% url 'toggle_teller_availability' teller.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-toggle">
+                        {% if teller.is_available %}Set Unavailable{% else %}Set Available{% endif %}
+                    </button>
+                </form>
+            </div>
+            {% empty %}
+            <p>No tellers configured yet.</p>
+            {% endfor %}
+        </div>
+
+        <h2>Active Queue Assignments</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticket</th>
+                    <th>Service</th>
+                    <th>Counter</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in active_assignments %}
+                <tr>
+                    <td><a href="{% url 'customer_status' item.ticket.ticket_number %}">{{ item.ticket.ticket_number }}</a></td>
+                    <td>{{ item.ticket.service.name }}</td>
+                    <td>Counter {{ item.teller.teller_number }}</td>
+                    <td>{{ item.ticket.get_status_display }}</td>
+                    <td>
+                        {% if item.ticket.status == 'waiting' %}
+                        <form action="{% url 'update_ticket_status' item.ticket.id 'serving' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-serve">Serve</button>
+                        </form>
+                        {% endif %}
+                        <form action="{% url 'update_ticket_status' item.ticket.id 'completed' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-done">Complete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">No active tickets in queue.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{% url 'service_selection' %}" class="btn-home">Back to Service Selection</a>
+    </div>
+</body>
+</html>

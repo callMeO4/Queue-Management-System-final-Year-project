@@ -14,8 +14,10 @@
         .stat-label { font-size: 14px; color: #4a5568; display: block; margin-bottom: 3px; }
         .stat-value { font-size: 24px; font-weight: bold; color: #2b6cb0; }
         .info-row { display: flex; justify-content: space-between; font-size: 14px; color: #4a5568; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
-        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold; }
+        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold; margin: 5px; }
         .btn-home:hover { background: #2b6cb0; }
+        .btn-sec { background: #4a5568; }
+        .btn-sec:hover { background: #2d3748; }
     </style>
 </head>
 <body>
@@ -25,9 +27,15 @@
 
         <div class="status-box">
             <div class="stat-item">
-                <span class="stat-label">People Ahead in Queue</span>
+                <span class="stat-label">Position in Teller Queue</span>
                 <span class="stat-value">{{ queue_position }}</span>
             </div>
+            {% if latest_prediction %}
+            <div class="stat-item">
+                <span class="stat-label">Estimated Wait Time</span>
+                <span class="stat-value" style="color: #c53030;">~{{ latest_prediction.predicted_wait_time }} mins</span>
+            </div>
+            {% endif %}
             
             <div class="info-row">
                 <span>Service:</span>
@@ -35,16 +43,16 @@
             </div>
             <div class="info-row">
                 <span>Assigned Teller:</span>
-                <strong>{% if assignment %}Teller {{ assignment.teller.teller_number }}{% else %}Pending Allocation{% endif %}</strong>
+                <strong>{% if assignment %}Counter {{ assignment.teller.teller_number }}{% else %}Pending Allocation{% endif %}</strong>
             </div>
             <div class="info-row">
                 <span>Current Status:</span>
-                <strong style="color: #38a169;">{{ ticket.get_status_display }}</strong>
+                <strong style="color: #2f855a;">{{ ticket.get_status_display }}</strong>
             </div>
         </div>
 
         <a href="{% url 'service_selection' %}" class="btn-home">Back to Services</a>
+        <a href="{% url 'lobby_display' %}" class="btn-home btn-sec">Lobby Display</a>
     </div>
 </body>
 </html>
-

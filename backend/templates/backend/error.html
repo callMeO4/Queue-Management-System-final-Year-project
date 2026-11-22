@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Notice - Queue Management System</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: #c53030; font-size: 22px; margin-bottom: 12px; }
+        p { color: #4a5568; margin-bottom: 20px; }
+        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold; }
+        .btn-home:hover { background: #2b6cb0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Unable to Complete Request</h1>
+        <p>{{ error_message }}</p>
+        <a href="{% url 'service_selection' %}" class="btn-home">Back to Services</a>
+    </div>
+</body>
+</html>
