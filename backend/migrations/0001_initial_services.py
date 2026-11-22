@@ -45,8 +45,8 @@ def create_initial_services(apps, schema_editor):
 class Migration(migrations.Migration):
 
   dependencies = [
-      # If this is your first migration, keep dependencies empty or link to initial state
-  ]
+        ('backend', '0001_initial'),
+    ]
 
   operations = [
       migrations.RunPython(create_initial_services),

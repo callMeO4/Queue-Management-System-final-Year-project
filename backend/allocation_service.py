@@ -1,5 +1,5 @@
 from datetime import datetime
-from ml_models.predictor import QueueWaitTimePredictor
+from ml_models.ml_models.predictor import QueueWaitTimePredictor
 from .models import Queue_Assignment, Queue_Ticket, Teller, Teller_Service
 
 
