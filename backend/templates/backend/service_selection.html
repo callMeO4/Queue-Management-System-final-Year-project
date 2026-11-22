@@ -6,20 +6,44 @@
     <title>Select Banking Service - Queue Management System</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #1a365d; text-align: center; font-size: 24px; }
+        .container { max-width: 640px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+        .topbar a, .topbar button { color: #2b6cb0; background: none; border: none; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 13px; padding: 0; }
+        .nav-group { display: flex; gap: 14px; align-items: center; }
+        h1 { color: #1a365d; text-align: center; font-size: 24px; margin-top: 4px; }
         p { color: #4a5568; text-align: center; }
         .service-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin-bottom: 15px; background: #fff; transition: transform 0.2s; }
         .service-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .service-title { font-size: 18px; font-weight: bold; color: #2b6cb0; margin-bottom: 5px; }
         .service-desc { font-size: 14px; color: #718096; margin-bottom: 10px; }
         .service-duration { font-size: 12px; color: #e53e3e; margin-bottom: 12px; }
-        .btn-select { display: block; width: 100%; text-align: center; background: #3182ce; color: white; padding: 10px; border-radius: 4px; text-decoration: none; font-weight: bold; }
+        .btn-select { display: block; width: 100%; background: #3182ce; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-select:hover { background: #2b6cb0; }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="topbar">
+            <div>
+                {% if user.is_authenticated %}
+                    Signed in as <strong>{{ user.username }}</strong> ({{ user.role|default:"customer" }})
+                {% else %}
+                    Walk-In Mode
+                {% endif %}
+            </div>
+            <div class="nav-group">
+                <a href="{% url 'lobby_display' %}">Lobby Display</a>
+                {% if user.is_authenticated %}
+                    <form action="{% url 'logout' %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+
         <h1>Mulungushi Bank Queue System</h1>
         <p>Please select the service you require today:</p>
         
@@ -39,4 +63,3 @@
     </div>
 </body>
 </html>
-

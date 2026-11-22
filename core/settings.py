@@ -103,3 +103,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom User Model
 AUTH_USER_MODEL = 'backend.User'
 
+
+CSRF_TRUSTED_ORIGINS = ['https://8000-m-s-usc1b10-2xakobpno805d-b.us-central1.prod.r.colab.dev', 'https://*.prod.r.colab.dev', 'https://*.colab.dev']

@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.service_selection_view, name='service_selection'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     path(
         'register/<int:service_id>/',
         views.register_queue_ticket,

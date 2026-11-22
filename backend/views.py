@@ -1,7 +1,8 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from .allocation_service import allocate_customer_to_best_teller
 from .models import (
     Customer,
@@ -15,6 +16,17 @@ from .models import (
 User = get_user_model()
 
 
+def _is_counter_staff(user):
+    if not user.is_authenticated:
+        return False
+    role = getattr(user, 'role', None)
+    return bool(
+        role in {'teller', 'admin'}
+        or getattr(user, 'is_staff', False)
+        or getattr(user, 'is_superuser', False)
+    )
+
+
 def _get_or_create_customer(request):
     if request.user.is_authenticated:
         customer, _ = Customer.objects.get_or_create(user=request.user)
@@ -26,6 +38,42 @@ def _get_or_create_customer(request):
     )
     customer, _ = Customer.objects.get_or_create(user=guest_user)
     return customer
+
+
+def login_view(request):
+    """Authenticates users and routes tellers/admins to the lobby display or customers to services."""
+    next_url = request.GET.get('next') or request.POST.get('next') or ''
+    error_message = None
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            if next_url and url_has_allowed_host_and_scheme(
+                url=next_url, allowed_hosts={request.get_host()}
+            ):
+                return redirect(next_url)
+            if _is_counter_staff(user):
+                return redirect('lobby_display')
+            return redirect('service_selection')
+
+        error_message = 'Invalid username or password. Please try again.'
+
+    return render(
+        request,
+        'backend/login.html',
+        {'error_message': error_message, 'next_url': next_url},
+    )
+
+
+def logout_view(request):
+    """Logs out the current user and returns to service selection."""
+    if request.method == 'POST':
+        logout(request)
+    return redirect('service_selection')
 
 
 def service_selection_view(request):
@@ -105,7 +153,16 @@ def customer_status_view(request, ticket_number):
 
 
 def lobby_display_view(request):
-    """Displays active queue tickets and teller counter statuses for the lobby/admin view."""
+    """Displays active queue tickets and teller counter statuses for tellers/admins."""
+    if not request.user.is_authenticated:
+        return redirect(f"/login/?next={request.path}")
+    if not _is_counter_staff(request.user):
+        return render(
+            request,
+            'backend/error.html',
+            {'error_message': 'Only Teller or Admin accounts can access the Counter & Lobby Display.'},
+        )
+
     active_assignments = (
         Queue_Assignment.objects.filter(is_active=True)
         .select_related('ticket', 'ticket__service', 'teller', 'teller__user')
@@ -124,6 +181,8 @@ def lobby_display_view(request):
 
 def update_ticket_status(request, ticket_id, action):
     """Updates a ticket status to serving or completed and closes active assignment on completion."""
+    if not _is_counter_staff(request.user):
+        return redirect(f"/login/?next={request.path}")
     if request.method == 'POST':
         ticket = get_object_or_404(Queue_Ticket, id=ticket_id)
         now = timezone.now()
@@ -144,6 +203,8 @@ def update_ticket_status(request, ticket_id, action):
 
 def toggle_teller_availability(request, teller_id):
     """Toggles a teller's availability and status state."""
+    if not _is_counter_staff(request.user):
+        return redirect(f"/login/?next={request.path}")
     if request.method == 'POST':
         teller = get_object_or_404(Teller, id=teller_id)
         teller.is_available = not teller.is_available
