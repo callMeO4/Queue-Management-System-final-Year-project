@@ -180,17 +180,26 @@ def lobby_display_view(request):
 
 
 def update_ticket_status(request, ticket_id, action):
-    """Updates a ticket status to serving or completed and closes active assignment on completion."""
+    """Updates a ticket status to serving or completed and syncs teller counter state."""
     if not _is_counter_staff(request.user):
         return redirect(f"/login/?next={request.path}")
     if request.method == 'POST':
         ticket = get_object_or_404(Queue_Ticket, id=ticket_id)
         now = timezone.now()
+        active_assignment = (
+            Queue_Assignment.objects.filter(ticket=ticket, is_active=True)
+            .select_related('teller')
+            .first()
+        )
+
         if action == 'serving':
             ticket.status = 'serving'
             if not ticket.service_start_time:
                 ticket.service_start_time = now
             ticket.save()
+            if active_assignment:
+                active_assignment.teller.current_status_state = 'Serving'
+                active_assignment.teller.save()
         elif action == 'completed':
             ticket.status = 'completed'
             if not ticket.service_start_time:
@@ -198,7 +207,18 @@ def update_ticket_status(request, ticket_id, action):
             ticket.completion_time = now
             ticket.save()
             Queue_Assignment.objects.filter(ticket=ticket, is_active=True).update(is_active=False)
+            if active_assignment:
+                still_serving = Queue_Assignment.objects.filter(
+                    teller=active_assignment.teller,
+                    is_active=True,
+                    ticket__status='serving',
+                ).exists()
+                active_assignment.teller.current_status_state = (
+                    'Serving' if still_serving else 'Ready'
+                )
+                active_assignment.teller.save()
     return redirect('lobby_display')
+
 
 
 def toggle_teller_availability(request, teller_id):
