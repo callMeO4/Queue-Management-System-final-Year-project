@@ -117,7 +117,7 @@ def register_queue_ticket(request, service_id):
 
 
 def customer_status_view(request, ticket_number):
-    """Allows customers to view their assigned teller, queue position, and estimated wait time."""
+    """Allows customers to view their assigned teller, people ahead, queue position, and estimated wait time."""
     ticket = get_object_or_404(Queue_Ticket, ticket_number=ticket_number)
     assignment = (
         Queue_Assignment.objects.filter(ticket=ticket, is_active=True)
@@ -125,14 +125,15 @@ def customer_status_view(request, ticket_number):
         .first()
     )
 
+    people_ahead = 0
     queue_position = 0
     if assignment:
-        ahead_count = Queue_Assignment.objects.filter(
+        people_ahead = Queue_Assignment.objects.filter(
             teller=assignment.teller,
             is_active=True,
             assigned_at__lt=assignment.assigned_at,
         ).count()
-        queue_position = ahead_count + 1
+        queue_position = people_ahead + 1
 
     latest_prediction = (
         Wait_Prediction.objects.filter(ticket=ticket)
@@ -146,14 +147,14 @@ def customer_status_view(request, ticket_number):
         {
             'ticket': ticket,
             'assignment': assignment,
+            'people_ahead': people_ahead,
             'queue_position': queue_position,
             'latest_prediction': latest_prediction,
         },
     )
 
-
 def lobby_display_view(request):
-    """Displays active queue tickets and teller counter statuses for tellers/admins."""
+    """Displays active queue tickets, per-counter queue counts, and teller counter statuses for tellers/admins."""
     if not request.user.is_authenticated:
         return redirect(f"/login/?next={request.path}")
     if not _is_counter_staff(request.user):
@@ -163,21 +164,87 @@ def lobby_display_view(request):
             {'error_message': 'Only Teller or Admin accounts can access the Counter & Lobby Display.'},
         )
 
-    active_assignments = (
+    active_assignments = list(
         Queue_Assignment.objects.filter(is_active=True)
         .select_related('ticket', 'ticket__service', 'teller', 'teller__user')
         .order_by('assigned_at')
     )
-    tellers = Teller.objects.select_related('user').order_by('teller_number')
+
+    counts_by_teller = {}
+    for item in active_assignments:
+        counts_by_teller[item.teller_id] = counts_by_teller.get(item.teller_id, 0) + 1
+
+    tellers = list(Teller.objects.select_related('user').order_by('teller_number'))
+    for teller in tellers:
+        teller.queue_count = counts_by_teller.get(teller.id, 0)
+
     return render(
         request,
         'backend/lobby_display.html',
         {
             'active_assignments': active_assignments,
             'tellers': tellers,
+            'total_queued_count': len(active_assignments),
         },
     )
 
+
+def view_queues_view(request):
+    """Dedicated queue inspection page for tellers and admins across all counters."""
+    if not request.user.is_authenticated:
+        return redirect(f"/login/?next={request.path}")
+    if not _is_counter_staff(request.user):
+        return render(
+            request,
+            'backend/error.html',
+            {'error_message': 'Only Teller or Admin accounts can view counter queues.'},
+        )
+
+    selected_teller = request.GET.get('teller', '').strip()
+    tellers = list(Teller.objects.select_related('user').order_by('teller_number'))
+
+    assignments_qs = (
+        Queue_Assignment.objects.filter(is_active=True)
+        .select_related('ticket', 'ticket__service', 'teller', 'teller__user')
+        .order_by('teller__teller_number', 'assigned_at')
+    )
+    if selected_teller.isdigit():
+        assignments_qs = assignments_qs.filter(teller__teller_number=int(selected_teller))
+
+    all_active = list(
+        Queue_Assignment.objects.filter(is_active=True).order_by('teller_id', 'assigned_at')
+    )
+    position_map = {}
+    running_by_teller = {}
+    for item in all_active:
+        idx = running_by_teller.get(item.teller_id, 0) + 1
+        running_by_teller[item.teller_id] = idx
+        position_map[item.id] = idx
+
+    latest_preds = {}
+    for pred in Wait_Prediction.objects.order_by('-created_at'):
+        if pred.ticket_id not in latest_preds:
+            latest_preds[pred.ticket_id] = pred.predicted_wait_time
+
+    filtered_assignments = list(assignments_qs)
+    for item in filtered_assignments:
+        item.queue_position = position_map.get(item.id, 1)
+        item.people_ahead = max(0, item.queue_position - 1)
+        item.predicted_wait_time = latest_preds.get(item.ticket_id)
+
+    for teller in tellers:
+        teller.queue_count = running_by_teller.get(teller.id, 0)
+
+    return render(
+        request,
+        'backend/view_queues.html',
+        {
+            'assignments': filtered_assignments,
+            'tellers': tellers,
+            'selected_teller': selected_teller,
+            'total_queued_count': len(all_active),
+        },
+    )
 
 def update_ticket_status(request, ticket_id, action):
     """Updates a ticket status to serving or completed and syncs teller counter state."""

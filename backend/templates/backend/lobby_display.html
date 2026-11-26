@@ -9,9 +9,12 @@
         .container { max-width: 960px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
         .topbar a, .topbar button { color: #2b6cb0; background: none; border: none; font-weight: bold; text-decoration: none; cursor: pointer; font-size: 13px; padding: 0; }
-        h1 { color: #1a365d; margin-top: 0; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+        h1 { color: #1a365d; margin: 0; }
+        .queue-pill { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; padding: 8px 14px; border-radius: 999px; font-weight: bold; font-size: 14px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
         .teller-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; background: #f8fafc; }
+        .queue-load { margin-top: 6px; font-size: 14px; font-weight: bold; color: #1a365d; }
         .badge-avail { color: #2f855a; font-weight: bold; }
         .badge-busy { color: #c53030; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -21,7 +24,8 @@
         .btn-serve { background: #3182ce; color: white; }
         .btn-done { background: #2f855a; color: white; }
         .btn-toggle { background: #4a5568; color: white; margin-top: 8px; }
-        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 18px; border-radius: 4px; text-decoration: none; font-weight: bold; margin-top: 18px; }
+        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 18px; border-radius: 4px; text-decoration: none; font-weight: bold; margin-top: 18px; margin-right: 8px; }
+        .btn-sec { background: #2d3748; }
     </style>
 </head>
 <body>
@@ -29,6 +33,7 @@
         <div class="topbar">
             <div>Signed in as <strong>{{ user.username }}</strong> ({{ user.role|default:"staff" }})</div>
             <div>
+                <a href="{% url 'view_queues' %}" style="margin-right: 14px;">View Queues</a>
                 <form action="{% url 'logout' %}" method="POST" style="display:inline;">
                     {% csrf_token %}
                     <button type="submit">Logout</button>
@@ -36,7 +41,10 @@
             </div>
         </div>
 
-        <h1>Live Counter & Lobby Queue Display</h1>
+        <div class="header-row">
+            <h1>Live Counter & Lobby Queue Display</h1>
+            <div class="queue-pill">Total Customers in Queue: {{ total_queued_count }}</div>
+        </div>
 
         <h2>Teller Counters</h2>
         <div class="grid">
@@ -44,6 +52,7 @@
             <div class="teller-card">
                 <div><strong>Counter {{ teller.teller_number }}</strong></div>
                 <div>State: {{ teller.current_status_state }}</div>
+                <div class="queue-load">Customers on Queue: {{ teller.queue_count }}</div>
                 <div>
                     {% if teller.is_available %}
                         <span class="badge-avail">Available</span>
@@ -102,6 +111,7 @@
             </tbody>
         </table>
 
+        <a href="{% url 'view_queues' %}" class="btn-home btn-sec">View Queues</a>
         <a href="{% url 'service_selection' %}" class="btn-home">Back to Service Selection</a>
     </div>
 </body>

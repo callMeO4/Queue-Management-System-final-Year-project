@@ -21,6 +21,11 @@ urlpatterns = [
         name='lobby_display',
     ),
     path(
+        'queues/',
+        views.view_queues_view,
+        name='view_queues',
+    ),
+    path(
         'tickets/<int:ticket_id>/<str:action>/',
         views.update_ticket_status,
         name='update_ticket_status',

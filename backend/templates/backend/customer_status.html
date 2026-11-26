@@ -14,7 +14,7 @@
         .stat-label { font-size: 14px; color: #4a5568; display: block; margin-bottom: 3px; }
         .stat-value { font-size: 24px; font-weight: bold; color: #2b6cb0; }
         .info-row { display: flex; justify-content: space-between; font-size: 14px; color: #4a5568; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
-        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-weight: bold; margin: 5px; }
+        .btn-home { display: inline-block; background: #3182ce; color: white; padding: 10px 18px; border-radius: 4px; text-decoration: none; font-weight: bold; margin: 5px; }
         .btn-home:hover { background: #2b6cb0; }
         .btn-sec { background: #4a5568; }
         .btn-sec:hover { background: #2d3748; }
@@ -27,8 +27,12 @@
 
         <div class="status-box">
             <div class="stat-item">
+                <span class="stat-label">People Ahead of You</span>
+                <span class="stat-value">{% if assignment %}{{ people_ahead }}{% else %}-{% endif %}</span>
+            </div>
+            <div class="stat-item">
                 <span class="stat-label">Position in Teller Queue</span>
-                <span class="stat-value">{{ queue_position }}</span>
+                <span class="stat-value">{% if assignment %}{{ queue_position }}{% else %}-{% endif %}</span>
             </div>
             {% if latest_prediction %}
             <div class="stat-item">
@@ -36,7 +40,7 @@
                 <span class="stat-value" style="color: #c53030;">~{{ latest_prediction.predicted_wait_time }} mins</span>
             </div>
             {% endif %}
-            
+
             <div class="info-row">
                 <span>Service:</span>
                 <strong>{{ ticket.service.name }}</strong>
@@ -51,6 +55,7 @@
             </div>
         </div>
 
+        <a href="{% url 'customer_status' ticket.ticket_number %}" class="btn-home btn-sec">Refresh Status</a>
         <a href="{% url 'service_selection' %}" class="btn-home">Back to Services</a>
         <a href="{% url 'lobby_display' %}" class="btn-home btn-sec">Lobby Display</a>
     </div>
