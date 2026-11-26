@@ -76,6 +76,14 @@ def logout_view(request):
     return redirect('service_selection')
 
 
+def ticket_lookup_view(request):
+    """Redirects a customer from the service selection lookup form to their ticket status page."""
+    ticket_number = (request.GET.get('ticket_number') or '').strip().upper()
+    if not ticket_number:
+        return redirect('service_selection')
+    return redirect('customer_status', ticket_number=ticket_number)
+
+
 def service_selection_view(request):
     """Displays available banking services for customers to choose from."""
     services = Service.objects.all().order_by('id')

@@ -60,6 +60,28 @@
         {% empty %}
         <p>No banking services currently available. Please check back later.</p>
         {% endfor %}
+    
+        <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #e2e8f0; text-align: left;">
+            <label style="display: block; font-size: 14px; font-weight: bold; color: #1a365d; margin-bottom: 8px;">
+                Already have a ticket? Check your queue status:
+            </label>
+            <form action="{% url 'ticket_lookup' %}" method="GET" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input
+                    type="text"
+                    name="ticket_number"
+                    placeholder="Enter Ticket Number (e.g. TKT-001)"
+                    required
+                    style="flex: 1; min-width: 200px; padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 14px;"
+                />
+                <button
+                    type="submit"
+                    style="padding: 10px 16px; background: #2b6cb0; color: #ffffff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;"
+                >
+                    Check Ticket Status
+                </button>
+            </form>
+        </div>
+
     </div>
 </body>
 </html>
